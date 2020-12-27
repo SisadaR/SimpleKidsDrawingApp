@@ -35,6 +35,10 @@ class MainActivity : AppCompatActivity() {
         mImageButtonCurrentPaint = mPaintColors[1] as ImageButton
         mImageButtonCurrentPaint!!.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.pallet_pressed))
 
+        findViewById<ImageButton>(R.id.ib_undo).setOnClickListener {
+            mDrawingView.onClickUndo()
+        }
+
         findViewById<ImageButton>(R.id.ib_brush).setOnClickListener {
             showBrushSizeChosserDialog()
         }
