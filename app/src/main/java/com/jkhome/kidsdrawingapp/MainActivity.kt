@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.MediaScannerConnection
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -212,15 +213,18 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(this@MainActivity, "File Saved $deferred",Toast.LENGTH_LONG).show()
             dialog.dismiss()
+            MediaScannerConnection.scanFile(this@MainActivity, arrayOf(deferred),null) { path, uri ->
+
+                val sharedIntent = Intent()
+                sharedIntent.action = Intent.ACTION_SEND
+                sharedIntent.putExtra(Intent.EXTRA_STREAM,uri)
+                sharedIntent.type = "image/png"
+
+                startActivity(Intent.createChooser(sharedIntent,"title"))
+
+            }
 
         }
-    }
-
-    private fun showProgressDialog(){
-        val dialog = Dialog(this@MainActivity)
-        dialog.setContentView(R.layout.dialog_custom_progress)
-        dialog.show()
-
     }
 
     private suspend fun bitmapSave(mBitmap: Bitmap) : String
