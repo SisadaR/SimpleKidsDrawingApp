@@ -12,6 +12,7 @@ import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -20,7 +21,9 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -54,10 +57,13 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.ib_save).setOnClickListener {
             if (isReadStorageAllowed()){
-                BitmapAsyncTask( getBitmapFromView(findViewById<View>(R.id.fl_drawing_view_container))).execute()
+                Log.i("simple draw app", "storage allowed")
+                //BitmapAsyncTask( getBitmapFromView(findViewById<View>(R.id.fl_drawing_view_container))).execute()
+                saveWithCoroutine(getBitmapFromView(findViewById<View>(R.id.fl_drawing_view_container)))
             }
             else
             {
+                Log.i("simple draw app", "storage  not allowed")
                 requestStoragePermission()
             }
         }
@@ -192,11 +198,38 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private suspend fun BitmapSave(val mBitmap: Bitmap)
-    {
-        withContext(Dispatchers.IO){
-
+    private fun saveWithCoroutine(mBitmap: Bitmap){
+        CoroutineScope(Dispatchers.Main).launch {
+            var result = bitmapSave(mBitmap)
+            Toast.makeText(this@MainActivity , "Save to path: $result", Toast.LENGTH_LONG).show()
         }
+
+    }
+    private suspend fun bitmapSave(mBitmap: Bitmap) : String
+    {
+         var result = ""
+            if(mBitmap != null)
+            {
+                try {
+                    val byte = ByteArrayOutputStream()
+                    mBitmap.compress(Bitmap.CompressFormat.PNG, 90,byte)
+                    val f = File(externalCacheDir!!.absoluteFile.toString()
+                            + File.separator + "KidDrawApp_"
+                            + System.currentTimeMillis() / 1000
+                            + ".png")
+                    val fos = FileOutputStream(f)
+                    fos.write(byte.toByteArray())
+                    fos.close()
+                    result = f.absolutePath
+
+                }catch (e:Exception){
+                    result = ""
+                    e.printStackTrace()
+                }
+
+            }
+
+        return result;
     }
 
     private inner class BitmapAsyncTask(val mBitmap: Bitmap) : AsyncTask<Any, Void, String>(){
