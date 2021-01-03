@@ -21,10 +21,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -199,12 +196,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveWithCoroutine(mBitmap: Bitmap){
-        CoroutineScope(Dispatchers.Main).launch {
-            var result = bitmapSave(mBitmap)
-            Toast.makeText(this@MainActivity , "Save to path: $result", Toast.LENGTH_LONG).show()
+
+
+        Toast.makeText(this@MainActivity, "StartLoad",Toast.LENGTH_LONG).show()
+
+        CoroutineScope(Dispatchers.Main).launch{
+
+            val dialog = Dialog(this@MainActivity)
+            dialog.setContentView(R.layout.dialog_custom_progress)
+            dialog.show()
+
+            val deferred = async(Dispatchers.IO) {
+                bitmapSave(mBitmap)
+            }.await()
+
+            Toast.makeText(this@MainActivity, "File Saved $deferred",Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+
         }
+    }
+
+    private fun showProgressDialog(){
+        val dialog = Dialog(this@MainActivity)
+        dialog.setContentView(R.layout.dialog_custom_progress)
+        dialog.show()
 
     }
+
     private suspend fun bitmapSave(mBitmap: Bitmap) : String
     {
          var result = ""
